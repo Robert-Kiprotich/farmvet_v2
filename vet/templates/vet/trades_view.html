@@ -1,0 +1,465 @@
+{% extends 'vet/base.html' %}
+
+{% block content %}
+<style>
+    /* Custom header color override for Bootstrap 5 table cells & card header */
+    .bg-custom-header {
+        background-color: #EF6255 !important;
+        color: #ffffff !important;
+    }
+
+    /* ===== Table wrapper: keeps header pinned above scrolling body so
+       header/body cells never overlap, even when cell content grows ===== */
+    .trades-table-wrapper {
+        max-height: 75vh;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+.text-muted {
+    font-size: 15px;
+}
+
+
+
+    .trades-table {
+        border-collapse: separate;
+        border-spacing: 0;
+        table-layout: auto;
+        width: 100%;
+        min-width: 1100px; /* forces horizontal scroll instead of column squish/overlap */
+    }
+
+    .trades-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        white-space: nowrap;
+    }
+
+    .trades-table tbody td {
+        vertical-align: middle;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    /* Minimum column widths so columns keep their shape regardless of content length */
+    .col-idx      { min-width: 48px; }
+    .col-photo    { min-width: 72px; }
+    .col-farm     { min-width: 190px; }
+    .col-category { min-width: 160px; }
+    .col-sex      { min-width: 140px; }
+    .col-qty      { min-width: 90px; }
+    .col-price    { min-width: 130px; }
+    .col-location { min-width: 140px; }
+    .col-stock    { min-width: 130px; }
+    .col-approval { min-width: 120px; }
+    .col-date     { min-width: 120px; }
+
+    /* Bold all table data */
+    .trades-table tbody td,
+    .trades-table tbody td div,
+    .trades-table tbody td span {
+        font-weight: 700 !important;
+    }
+
+    /* Clickable thumbnail */
+    .trade-thumb {
+        width: 48px;
+        height: 48px;
+        object-fit: cover;
+        cursor: pointer;
+        transition: transform 0.15s ease;
+    }
+    .trade-thumb:hover {
+        transform: scale(1.08);
+    }
+
+    /* ===== Self-contained image lightbox (no Bootstrap JS dependency) ===== */
+    .trade-lightbox-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: 1080;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+    }
+    .trade-lightbox-overlay.is-open {
+        display: flex;
+    }
+    .trade-lightbox-box {
+        background: #fff;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        max-width: 90vw;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.4);
+    }
+    .trade-lightbox-header {
+        background-color: #EF6255;
+        color: #fff;
+        padding: 0.85rem 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .trade-lightbox-header h5 {
+        margin: 0;
+        font-size: 1.05rem;
+    }
+    .trade-lightbox-close {
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 1.5rem;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0;
+    }
+    .trade-lightbox-body {
+        overflow: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+    }
+    .trade-lightbox-body img {
+        max-width: 100%;
+        max-height: 80vh;
+        display: block;
+        object-fit: contain;
+    }
+
+    /* ===== Mobile card layout (shown below lg breakpoint instead of table) ===== */
+    .trades-cards {
+        display: none;
+    }
+
+    .trade-card {
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-bottom: 0.85rem;
+    }
+
+    .trade-card .trade-card-thumb {
+        width: 56px;
+        height: 56px;
+        object-fit: cover;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+
+    .trade-card .field-label {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: #6c757d;
+        font-weight: 600;
+        margin-bottom: 0.1rem;
+    }
+
+    .trade-card .field-value {
+        font-weight: 700 !important;
+        color: #212529;
+    }
+
+    @media (max-width: 991.98px) {
+        .trades-table-wrapper {
+            display: none;
+        }
+        .trades-cards {
+            display: block;
+        }
+    }
+</style>
+
+<div class="container-fluid px-3 px-md-4 py-4">
+    <div class="card shadow-sm border-0 rounded-3">
+        <!-- Card Header (#EF6255) -->
+        <div class="card-header bg-custom-header d-flex flex-wrap justify-content-between align-items-center py-3 px-4">
+            <div>
+                <h5 class="mb-0 fw-bold">Livestock On Sale</h5>
+                <small class="text-white-50">Overview of active, pending, and completed trades</small>
+            </div>
+            <span class="badge bg-light fs-6 px-3 py-2 fw-semibold rounded-pill mt-2 mt-sm-0" style="color: #EF6255;">
+                Total Records: {{ trades_list.count }}
+            </span>
+        </div>
+
+        <div class="card-body p-0">
+
+            <!-- ============ DESKTOP / TABLET TABLE (lg and up) ============ -->
+            <div class="trades-table-wrapper">
+                <table class="table table-striped table-hover trades-table mb-0">
+                    <colgroup>
+                        <col class="col-idx">
+                        <col class="col-photo">
+                        <col class="col-farm">
+                        <col class="col-category">
+                        <col class="col-sex">
+                        <col class="col-qty">
+                        <col class="col-price">
+                        <col class="col-price">
+                        <col class="col-location">
+                        <col class="col-stock">
+                        <col class="col-approval">
+                        <col class="col-date">
+                    </colgroup>
+                    <thead>
+                        <tr class="align-middle">
+                            <th scope="col" class="bg-custom-header ps-4 py-3">#</th>
+                            <th scope="col" class="bg-custom-header py-3">Photo</th>
+                            <th scope="col" class="bg-custom-header py-3">Farm & Seller</th>
+                            <th scope="col" class="bg-custom-header py-3">Category & Breed</th>
+                            <th scope="col" class="bg-custom-header py-3">Sex & Age</th>
+                            <th scope="col" class="bg-custom-header text-center py-3">Qty</th>
+                            <th scope="col" class="bg-custom-header text-end py-3">Unit Price</th>
+                            <th scope="col" class="bg-custom-header text-end py-3">Vet in Charge</th>
+                            <th scope="col" class="bg-custom-header py-3">Location</th>
+                            <th scope="col" class="bg-custom-header text-center py-3">Status</th>
+                            <th scope="col" class="bg-custom-header text-center py-3">Approval</th>
+                            <th scope="col" class="bg-custom-header pe-4 py-3">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trade in trades_list %}
+                        <tr>
+                            <td class="ps-4 text-secondary">{{ forloop.counter }}</td>
+
+                            <!-- Image Thumbnail (click to enlarge) -->
+                            <td>
+                                {% if trade.photo %}
+                                    <img src="{{ trade.photo.url }}"
+                                         alt="{{ trade.livestock_category }}"
+                                         class="rounded-3 shadow-sm trade-thumb"
+                                         data-full-src="{{ trade.photo.url }}"
+                                         data-full-alt="{{ trade.livestock_category }} - {{ trade.farm_name }}"
+                                         onclick="openTradeLightbox(this)">
+                                {% else %}
+                                    <div class="bg-light border text-muted rounded-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 0.75rem;">
+                                        No Image
+                                    </div>
+                                {% endif %}
+                            </td>
+
+                            <!-- Farm & Seller Details -->
+                            <td>
+                                <div class="text-dark">{{ trade.farm_name }}</div>
+                                <div class="text-muted small">{{ trade.seller_name }}</div>
+                                <div class="text-muted small"><i class="bi bi-telephone"></i> {{ trade.seller_contacts }}</div>
+                            </td>
+
+                            <!-- Category & Breed -->
+                            <td>
+                                <div class="text-dark">{{ trade.livestock_category }}</div>
+                                <div class="text-muted small">{{ trade.breed|default:"Unspecified Breed" }}</div>
+                            </td>
+
+                            <!-- Sex / Status / Age -->
+                            <td>
+                                <div class="text-dark">{{ trade.sex }}</div>
+                                <div class="text-muted small">
+                                     {{ trade.age }}
+                                </div>
+                            </td>
+
+                            <!-- Quantity -->
+                            <td class="text-center">
+                                <span class="badge bg-secondary fs-6 px-3 py-2 rounded-pill">{{ trade.number_on_sale }}</span>
+                            </td>
+
+                            <!-- Unit Price -->
+                            <td class="text-end text-dark">
+                                KSh {{ trade.price_per_unit|floatformat:2 }}
+                            </td>
+
+                            <!-- Total Value -->
+                            <td class="text-end text-success fs-6">
+                                 {{ trade.vet_incharge }}
+                                <div class="text-muted small">{{ trade.vet_contacts }} </div>
+                                  <div class="text-muted small">KVB NO:{{ trade.kvb_number }} </div>
+                            </td>
+
+                            <!-- Location -->
+                            <td>
+                                <div class="text-dark">{{ trade.county }}</div>
+                                <div class="text-muted small">{{ trade.sub_county }} • {{ trade.location }}</div>
+                            </td>
+
+                            <!-- Stock Status -->
+                            <td class="text-center">
+                                {% if trade.sales_status == "In Stock" %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill">In Stock</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-2 rounded-pill">Out of Stock</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Approval Status -->
+                            <td class="text-center">
+                                {% if trade.approval_status == "Approved" %}
+                                    <span class="badge bg-success px-3 py-2 rounded-pill">Approved</span>
+                                {% elif trade.approval_status == "Pending" %}
+                                    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Pending</span>
+                                {% else %}
+                                    <span class="badge bg-danger px-3 py-2 rounded-pill" title="{{ trade.rejection_reason }}">Rejected</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Created Date -->
+                            <td class="pe-4 text-muted small">
+                                {{ trade.created_at|date:"M d, Y" }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="12" class="text-center py-5 text-muted fs-6">
+                                <em>No livestock trade records found.</em>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ============ MOBILE CARD LAYOUT (below lg) ============ -->
+            <div class="trades-cards p-3">
+                {% for trade in trades_list %}
+                <div class="trade-card">
+                    <div class="d-flex gap-3 align-items-start">
+                        {% if trade.photo %}
+                            <img src="{{ trade.photo.url }}"
+                                 alt="{{ trade.livestock_category }}"
+                                 class="rounded-3 shadow-sm trade-card-thumb"
+                                 data-full-src="{{ trade.photo.url }}"
+                                 data-full-alt="{{ trade.livestock_category }} - {{ trade.farm_name }}"
+                                 onclick="openTradeLightbox(this)">
+                        {% else %}
+                            <div class="bg-light border text-muted rounded-3 d-flex align-items-center justify-content-center trade-card-thumb" style="font-size: 0.65rem;">
+                                No Image
+                            </div>
+                        {% endif %}
+
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="field-value fs-6">{{ trade.farm_name }}</div>
+                                <span class="badge bg-secondary rounded-pill">#{{ forloop.counter }}</span>
+                            </div>
+                            <div class="text-muted small fw-bold">{{ trade.seller_name }} • {{ trade.seller_contacts }}</div>
+                        </div>
+                    </div>
+
+                    <hr class="my-2">
+
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <div class="field-label">Category & Breed</div>
+                            <div class="field-value">{{ trade.livestock_category }}</div>
+                            <div class="text-muted small fw-bold">{{ trade.breed|default:"Unspecified Breed" }}</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="field-label">Sex & Age</div>
+                            <div class="field-value">{{ trade.sex }}</div>
+                            <div class="text-muted small fw-bold">{{ trade.status }}{% if trade.age %} • {{ trade.age }}{% endif %}</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="field-label">Quantity</div>
+                            <span class="badge bg-secondary rounded-pill px-3 py-2">{{ trade.number_on_sale }}</span>
+                        </div>
+                        <div class="col-6">
+                            <div class="field-label">Unit Price</div>
+                            <div class="field-value">KSh {{ trade.price_per_unit|floatformat:2 }}</div>
+                        </div>
+                         
+                        <div class="col-6">
+                            <div class="field-label">Vet Incharge</div>
+                            <div class="field-value text-success"> {{ trade.vet_incharge }}</div>
+                            <div class="text-muted small">{{ trade.vet_contacts }} </div>
+                                  <div class="text-muted small">KVB NO:{{ trade.kvb_number }} </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="field-label">Status</div>
+                            {% if trade.sales_status == "In Stock" %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill">In Stock</span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-2 rounded-pill">Out of Stock</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-6">
+                            <div class="field-label">Approval</div>
+                            {% if trade.approval_status == "Approved" %}
+                                <span class="badge bg-success px-3 py-2 rounded-pill">Approved</span>
+                            {% elif trade.approval_status == "Pending" %}
+                                <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Pending</span>
+                            {% else %}
+                                <span class="badge bg-danger px-3 py-2 rounded-pill" title="{{ trade.rejection_reason }}">Rejected</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-12">
+                            <div class="field-label">Location</div>
+                            <div class="field-value">{{ trade.county }}</div>
+                            <div class="text-muted small fw-bold">{{ trade.sub_county }} • {{ trade.location }}</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="field-label">Date</div>
+                            <div class="field-value">{{ trade.created_at|date:"M d, Y" }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-5 text-muted fs-6">
+                    <em>No livestock trade records found.</em>
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ============ IMAGE PREVIEW LIGHTBOX (vanilla JS, no Bootstrap JS needed) ============ -->
+<div class="trade-lightbox-overlay" id="tradeLightboxOverlay" onclick="if(event.target===this) closeTradeLightbox()">
+    <div class="trade-lightbox-box">
+        <div class="trade-lightbox-header">
+            <h5 id="tradeLightboxLabel">Livestock Photo</h5>
+            <button type="button" class="trade-lightbox-close" aria-label="Close" onclick="closeTradeLightbox()">&times;</button>
+        </div>
+        <div class="trade-lightbox-body">
+            <img id="tradeLightboxImg" src="" alt="">
+        </div>
+    </div>
+</div>
+
+<script>
+    function openTradeLightbox(imgEl) {
+        var fullSrc = imgEl.getAttribute('data-full-src');
+        var fullAlt = imgEl.getAttribute('data-full-alt') || 'Livestock photo';
+
+        var overlay = document.getElementById('tradeLightboxOverlay');
+        var lightboxImg = document.getElementById('tradeLightboxImg');
+        var lightboxLabel = document.getElementById('tradeLightboxLabel');
+
+        lightboxImg.src = fullSrc;
+        lightboxImg.alt = fullAlt;
+        lightboxLabel.textContent = fullAlt;
+
+        overlay.classList.add('is-open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeTradeLightbox() {
+        var overlay = document.getElementById('tradeLightboxOverlay');
+        overlay.classList.remove('is-open');
+        document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeTradeLightbox();
+    });
+</script>
+{% endblock %}

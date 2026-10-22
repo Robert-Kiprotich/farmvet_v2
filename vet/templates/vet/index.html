@@ -1,0 +1,232 @@
+{% extends 'vet/base.html'  %}
+
+{% load static %}
+
+{% block content %}
+<style>
+  .whatsapp-button {
+    position: fixed;
+    top: 110px; 
+    right: 20px;
+    background: #25D366; /* WhatsApp green */
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 10px 22px;
+    font-weight: 600;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    cursor: pointer;
+    z-index: 9999;
+    transition: all 0.3s ease-in-out;
+    animation: fadeInRight 0.8s ease-in-out;
+  }
+
+  .whatsapp-button:hover {
+    background: #20b857; /* darker WhatsApp green */
+    transform: scale(1.08);
+    color: white;
+  }
+
+  @keyframes fadeInRight {
+    from { opacity: 0; transform: translateX(40px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+</style>
+
+
+<button class="whatsapp-button" id="whatsappBtn">
+  <i class="fa-solid fa-message"></i> Chat With Us
+</button>
+    <section id="hero">
+      
+      <div class="hero-container">
+
+       
+        <div id="heroCarousel" class="carousel slide carousel-fade" data-ride="carousel">
+
+          <ol class="carousel-indicators" id="hero-carousel-indicators"></ol>
+
+          <div class="carousel-inner" role="listbox">
+
+            <!-- Slide 1 -->
+            <div class="carousel-item active" style="background: url(static/vet/assets/img/slide/slide-1.jpg)">
+              <div class="carousel-container">
+                <div class="carousel-content">
+                  <h2 class="animate__animated animate__fadeInDown">Welcome to <span>SoinVet</span></h2>
+                  <p class="animate__animated animate__fadeInUp">At SOIN VETERINARY SERVICES,We go beyond treatment,we bring you Smart Dgital Records designed for both veterinary professionals and Farmers.</p>
+                  <a href="" class="btn-get-started animate__animated animate__fadeInUp">Read More</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slide 2 -->
+            <div class="carousel-item" style="background: url(static/vet/assets/img/slide/slide-2.jpg)">
+              <div class="carousel-container">
+                <div class="carousel-content">
+                  <h2 class="animate__animated fanimate__adeInDown">SoinVet <span> Digitizing </span></h2>
+                  <p class="animate__animated animate__fadeInUp">Health Records,Transforming Veterinary Services and Powering the future of Animal Health in Africa.
+
+A unified digital platform Connecting Veterinarians, farmers, Cooperatives, Counties, and industry partners for smarter, faster, and more transparent Livestock management.</p>
+                  <a href="" class="btn-get-started animate__animated animate__fadeInUp">Read More</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slide 3 -->
+            <div class="carousel-item" style="background: url(static/vet/assets/img/slide/slide-3.jpg)">
+              <div class="carousel-container">
+                <div class="carousel-content">
+                  <h2 class="animate__animated animate__fadeInDown">Veterinary <span>practitioner portal.</span></h2>
+                  <p class="animate__animated animate__fadeInUp">
+Empowering Animal Health professionals,As smart digital workspace for Veterinary practitioners to manage cases, treatment records, farm visits, prescriptions, reports, and CPD activities-all in one secure Platform. Deliver faster, smarter, and more professional veterinary services.</p>
+                  <a href="" class="btn-get-started animate__animated animate__fadeInUp">Read More</a>
+                </div>
+              </div>
+            </div>
+              <div class="carousel-item" style="background: url(static/vet/assets/img/slide/slide-2.jpg)">
+              <div class="carousel-container">
+                <div class="carousel-content">
+                  <h2 class="animate__animated fanimate__adeInDown">Dairy <span> coorperative portal </span></h2>
+                  <p class="animate__animated animate__fadeInUp">Streamlining Milk Collection & Cooperative managing farmer records, milk delivares, Payments, Quality reports, and analytics in real-time. Improve transparency, efficiency, and profitability for your cooperative.</p>
+                  <a href="" class="btn-get-started animate__animated animate__fadeInUp">Read More</a>
+                </div>
+              </div>
+              <div class="carousel-item active" style="background: url(static/vet/assets/img/slide/slide-1.jpg)">
+              <div class="carousel-container">
+                <div class="carousel-content">
+                  <h2 class="animate__animated animate__fadeInDown">County <span>Veterinary</span></h2>
+                  <p class="animate__animated animate__fadeInUp">Portal strengthening livestock health governance.Monitor disease surveillance, vaccination programs, Livestock movement, inspection reppts, and field officer activities with centralized digital Control for better County Planning and response.</p>
+                  <a href="" class="btn-get-started animate__animated animate__fadeInUp">Read More</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Slide 4 -->
+            <div class="carousel-item" style="background: url(static/vet/assets/img/slide/slide-4.jpg)">
+              <div class="carousel-container">
+                <div class="carousel-content">
+                  <h2 class="animate__animated fanimate__adeInDown">Farmer<span>Portal.</span></h2>
+                  <p class="animate__animated animate__fadeInUp">
+Smart Farming at your fingertips. Access animal health records, vaccination Schedules, milk production data, breeding history, and expert veterinary support anytime. Make informed decisions and grow your farm with confidence.</p>
+                  <a href="" class="btn-get-started animate__animated animate__fadeInUp">Read More</a>
+                </div>
+              </div>
+            </div>
+          </div>
+          <a class="carousel-control-prev" href="#heroCarousel" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon icofont-rounded-left" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+          </a>
+
+          <a class="carousel-control-next" href="#heroCarousel" role="button" data-slide="next">
+            <span class="carousel-control-next-icon icofont-rounded-right" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+          </a>
+
+        </div>
+      </div>
+      
+    </section><!-- End Hero -->
+
+    <main id="main">
+      <!-- ======= Featured Section ======= -->
+      <section id="featured" class="featured">
+        <div class="container">
+
+          <div class="row">
+            <div class="col-lg-4">
+              <div class="icon-box">
+                <i class="icofont-computer"></i>
+                <h3><a href="">Vision</a></h3>
+                <p>Transforming livestock health and farm management through innovative digital solutions.</p>
+              </div>
+            </div>
+            <div class="col-lg-4 mt-4 mt-lg-0">
+              <div class="icon-box">
+                <i class="icofont-image"></i>
+                <h3><a href="">Mision</a></h3>
+                <p>To empower veterinarians and farmers with seamless, data-driven online records, enhancing efficiency, animal health, and productivity.</p>
+              </div>
+            </div>
+            <div class="col-lg-4 mt-4 mt-lg-0">
+              <div class="icon-box">
+                <i class="icofont-tasks-alt"></i>
+                <h3><a href="">Motto</a></h3>
+                <p>Smart Records Healthy Livestock.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section><!-- End Featured Section -->
+
+      {% comment %} <!-- ======= About Section ======= -->
+      <section id="about" class="about">
+        <div class="container">
+
+          <div class="row">
+            <div class="col-lg-6">
+              <img src="{% static 'vet/assets/img/about.jpg' %}" class="img-fluid" alt="">
+            </div>
+            <div class="col-lg-6 pt-4 pt-lg-0 content">
+              <h3>Soin Veterinary.</h3>
+              <p class="font-italic">
+                Welcome to Soin Veterinary. We provide an ideal environment for both veterinary professionals and farmers to save their records. Our clients' satisfaction is our priority. The records saved are accessible at your own convenient time and designed in PDF format for printing.
+  
+  Our system is incorporated with learning sections where veterinary practitioners and farmers learn at their own pace.
+  
+  Your information is safe and only maintained as per the terms of service and privacy policy.
+  
+              </p> 
+              
+              
+            </div>
+          </div>
+
+        </div>
+      </section><!-- End About Section --> {% endcomment %}
+
+      <!-- ======= Clients Section ======= -->
+
+          <!DOCTYPE html>
+<html lang="en">
+
+
+<body>
+
+  <!-- End Header --><!DOCTYPE html>
+<html lang="en">
+
+
+<body>
+
+  <!-- End Header -->
+          <body>
+          
+            <!-- End Header --><!DOCTYPE html>
+<html lang="en">
+
+
+<body>
+
+  <!-- End Header -->
+
+      </section><!-- End Clients Section -->
+
+    </main><!-- End #main -->
+    <script>
+      // Replace with your WhatsApp number in international format, without + or dashes
+      const whatsappNumber = "254142312041"; 
+      const defaultMessage = "Hello Soin Veterinary Services, I am  Contacting You From Your Website Requesting for Assistance";
+    
+      document.getElementById("whatsappBtn").addEventListener("click", function() {
+        // Opens WhatsApp chat in a new tab
+        const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(defaultMessage)}`;
+        window.open(url, "_blank");
+      });
+    </script>
+ {% endblock content %}   

@@ -1,0 +1,92 @@
+{% extends 'vet/base.html'  %}
+
+{% load static %}
+
+{% block content %}
+
+  <main id="main">
+
+    <!-- ======= Breadcrumbs ======= -->
+    <section id="breadcrumbs" class="breadcrumbs">
+      <div class="container">
+
+        <ol>
+          <li><a href="{% url 'index' %}">Home</a></li>
+          <li>Services</li>
+        </ol>
+        <h2>Services</h2>
+
+      </div>
+    </section><!-- End Breadcrumbs -->
+
+    <!-- ======= Services Section ======= -->
+    <section id="services" class="services">
+      <div class="container">
+
+        <div class="section-title" data-aos="fade-up">
+          <h2>Our Services</h2>
+        </div>
+
+        <div class="row">
+          <div class="col-lg-4 col-md-6 d-flex align-items-stretch">
+            <div class="icon-box">
+              <div class="icon"><i class="bx bxl-dribbble"></i></div>
+              <h4><a href="">Veterinary Practitioners Records</a></h4>
+              <p>Why Vets on Digital?
+                •	Build a trusted professional profile.
+                •	Keep secure digital case & treatment records.
+                •	Track CPD points and compliance.
+                •	Verify credentials with the Kenya Veterinary Board.
+                •	Connect with farmers, cooperatives, and peers.
+                </p>
+            
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6 d-flex align-items-stretch mt-4 mt-lg-0">
+            <div class="icon-box">
+              <div class="icon"><i class="bx bx-tachometer"></i></div>
+              <h4><a href="">Farmers Records</a></h4>
+              <p>Why farmer on Digital?
+                •	Manage all animal health records in one place.
+                •	Get reminders for vaccination, deworming & breeding.
+                •	Access licensed vets & AI services anytime.
+                •	Track milk supply and payments via cooperatives.
+                •	Improve herd productivity with digital insights.
+                </p>
+            </div>
+          </div>
+
+          <div class="col-lg-4 col-md-6 d-flex align-items-stretch mt-4">
+            <div class="icon-box">
+              <div class="icon"><i class="bx bx-world"></i></div>
+              <h4><a href="">Dairy Cooperatives Records</a></h4>
+              <p>Why Dairy Cooperatives on Digital?
+                •	Manage milk collection and farmer payments online.
+                •	Ensure traceability and quality assurance.
+                •	Generate performance reports and analytics.
+                •	Link farmers, vets, and buyers seamlessly.
+                •	Strengthen cooperative governance and transparency.
+                </p>
+
+            </div>
+          </div>
+
+        
+          <div class="col-lg-4 col-md-6 d-flex align-items-stretch mt-4">
+            <div class="icon-box">
+              <div class="icon"><i class="bx bx-map"></i></div>
+              <h4><a href="">County Veterinary Services Records</a></h4>
+              <p>Why County Veterinary Services on Digital?
+                •	Monitor licensed veterinary practitioners.
+                •	Access real-time livestock health and disease data.
+                •	Generate reports for policy and planning.
+                •	Oversee slaughterhouse & meat inspection records.
+                •	Support vaccination campaigns & livestock census.
+                </p>
+            </div>
+          </div>
+          
+    </section><!-- End Services Section -->
+  </main><!-- End #main -->
+
+{% endblock content%}

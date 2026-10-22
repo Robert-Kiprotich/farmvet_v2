@@ -1,0 +1,61 @@
+
+{% load static %}
+<header id="header">
+  <div class="container d-flex align-items-center">
+
+    <div class="logo d-flex align-items-center">
+      <a href="{% url 'index' %}">
+        <img
+          src="{% static 'vet/assets/img/llogo2.png' %}"
+          alt="Logo"
+          style="height: 40px; margin-right: 8px; margin-top: 6px; border-radius: 50px;"
+        >
+      </a>
+
+      <h1 class="text-light mb-0">
+        <a href="{% url 'index' %}">
+          <span style="font-size: 25px;">SOIN VETERINARY</span>
+        </a>
+      </h1>
+    </div>
+
+    <nav class="nav-menu d-none d-lg-block ml-auto">
+      <ul>
+        <li class="active">
+          <a href="{% url 'index' %}">Home</a>
+        </li>
+
+        <li class="drop-down">
+          <a href="#">About</a>
+          <ul>
+            <li><a href="{% url 'about' %}">About Us</a></li>
+            <li><a href="{% url 'team' %}">Our Team</a></li>
+          </ul>
+        </li>
+
+        <li>
+          <a href="{% url 'services' %}">Services</a>
+        </li>
+
+        
+          <li>
+            <a href="/portal">Open Portal</a>
+          </li>
+         
+       
+        <li>
+          <a href="{% url 'blog' %}">Our Partners</a>
+        </li>
+
+        <li>
+          <a href="{% url 'trades_view' %}">Livestock Sales</a>
+        </li>
+
+        <li>
+          <a href="{% url 'contact' %}">Contact</a>
+        </li>
+      </ul>
+    </nav>
+
+  </div>
+</header>
