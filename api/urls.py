@@ -268,7 +268,8 @@ api_patterns = [
     path('score/', score, name='score'),
     path('start_quiz/', start_quiz, name='start-quiz'),
     path('submit_quiz/', submit_quiz, name='submit-quiz'),
-   
+    path("admin/tutorials/<int:tutorial_id>/attempts/", views.tutorial_attempts),
+path("admin/tutorials/<int:tutorial_id>/attempts/reset/", views.tutorial_attempts_reset),
     path('tutorials/create/', TutorialCreate.as_view(), name='tutorial-create'),
     path('tutorials/list/', TutorialList.as_view(), name='tutorial-list'),
     path('tutorials/update/<int:pk>/', TutorialUpdate.as_view(), name='tutorial-update'),

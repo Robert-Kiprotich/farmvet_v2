@@ -394,7 +394,11 @@ function PayPanel({ tutorial, onGuard, onClose, onPaid }: {
       n++;
       setAttempt(n);
       try {
-        const r = await API.post("mpesa/status/", new URLSearchParams({ checkout_request_id: checkoutId }));
+       const r = await API.post(
+  "mpesa/status/",
+  new URLSearchParams({ checkout_request_id: checkoutId }),
+  { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
+);
         if (!alive.current) return;
         const st = r.data?.status;
         if (st === "Completed") {
@@ -1165,7 +1169,7 @@ function CreateTutorialPanel({ onClose, onCreated }: {
 }/* ─────────────────────────── Admin: manage sections & questions ─────────────────────────── */
 
 function ManagePanel({ tutorial, onClose }: { tutorial: any; onClose: () => void }) {
-  const [tab, setTab] = useState<"sections" | "questions">("sections");
+  const [tab, setTab] = useState<"sections" | "questions" | "attempts">("sections");
   const [sections, setSections] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -1191,17 +1195,25 @@ function ManagePanel({ tutorial, onClose }: { tutorial: any; onClose: () => void
             <button className={`nav-link ${tab === "sections" ? "active" : ""}`} onClick={() => setTab("sections")}>
               <i className="ti ti-files me-1" />Sections <span className="badge bg-primary-transparent text-primary ms-1">{sections.length}</span>
             </button>
-          </li>
+          </li><li className="nav-item">
+  <button className={`nav-link ${tab === "attempts" ? "active" : ""}`} onClick={() => setTab("attempts")}>
+    <i className="ti ti-refresh me-1" />Attempts
+  </button>
+</li>
           <li className="nav-item">
             <button className={`nav-link ${tab === "questions" ? "active" : ""}`} onClick={() => setTab("questions")}>
               <i className="ti ti-help-circle me-1" />Questions &amp; answers
             </button>
           </li>
-        </ul>
 
-        {tab === "sections"
-          ? <SectionsTab tutorialId={tutorial.id} sections={sections} loading={loading} reload={loadSections} />
-          : <QuestionsTab sections={sections} loading={loading} />}
+        </ul>
+{tab === "sections" ? (
+  <SectionsTab tutorialId={tutorial.id} sections={sections} loading={loading} reload={loadSections} />
+) : tab === "questions" ? (
+  <QuestionsTab sections={sections} loading={loading} />
+) : (
+  <AttemptsTab tutorialId={tutorial.id} />
+)}
       </div>
 
       <div className="offcanvas-footer border-top p-3 d-flex justify-content-between align-items-center gap-2">
@@ -1527,5 +1539,129 @@ function QuestionsTab({ sections, loading: sectionsLoading }: { sections: any[];
         </div>
       </div>
     </>
+  );
+}
+/* ── Attempts (reset failed quiz attempts) ── */
+
+function AttemptsTab({ tutorialId }: { tutorialId: number }) {
+  const [rows, setRows] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await API.get(`admin/tutorials/${tutorialId}/attempts/`);
+      setRows(asList(res.data));
+    } catch (err: any) {
+      showError(errorMessage(err, "Could not load attempts."), "Load failed", 6000);
+    } finally {
+      setLoading(false);
+    }
+  }, [tutorialId]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const q = search.trim().toLowerCase();
+  const visible = q
+    ? rows.filter(r =>
+        (r.name || "").toLowerCase().includes(q) ||
+        (r.username || "").toLowerCase().includes(q) ||
+        (r.section_title || "").toLowerCase().includes(q))
+    : rows;
+
+  async function reset(r: any) {
+    const ok = await showConfirm(
+      `${r.name} will get a fresh set of attempts for "${r.section_title}". Their failed results will be deleted.`,
+      "Reset attempts?",
+      "Yes, reset"
+    );
+    if (!ok) return;
+    const key = `${r.user_id}-${r.section_id}`;
+    setBusyKey(key);
+    try {
+      await API.post(`admin/tutorials/${tutorialId}/attempts/reset/`, {
+        user: r.user_id,
+        section: r.section_id,
+      });
+      showSuccess(`Attempts reset for ${r.name}.`, "Attempts reset");
+      await load();
+    } catch (err: any) {
+      showError(errorMessage(err, "Could not reset attempts."), "Reset failed", 6000);
+    } finally {
+      setBusyKey(null);
+    }
+  }
+
+  return (
+    <div className="card shadow-none border mb-0">
+      <div className="card-header border-bottom py-2 d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div className="d-flex align-items-center gap-2">
+          <h6 className="mb-0 fw-semibold fs-14">Failed attempts</h6>
+          <span className="badge bg-primary-transparent text-primary fs-11">{rows.length}</span>
+        </div>
+        <input
+          className="form-control form-control-sm fs-13"
+          style={{ maxWidth: 220 }}
+          placeholder="Search learner or section…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+      <div className="card-body p-0">
+        {loading ? (
+          <div className="text-center text-muted py-4"><span className="spinner-border spinner-border-sm me-2" />Loading…</div>
+        ) : visible.length === 0 ? (
+          <div className="text-center text-muted py-4">
+            {rows.length === 0 ? "No one has failed a quiz in this lesson." : "No matches."}
+          </div>
+        ) : (
+          <div className="table-responsive">
+            <table className="table table-hover mb-0 fs-13">
+              <thead className="table-light">
+                <tr>
+                  <th>Learner</th>
+                  <th>Section</th>
+                  <th className="text-end">Failed</th>
+                  <th className="text-nowrap">Last attempt</th>
+                  <th className="text-end">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map(r => {
+                  const key = `${r.user_id}-${r.section_id}`;
+                  const locked = r.failed >= MAX_FAILED && !r.has_passed;
+                  return (
+                    <tr key={key}>
+                      <td>
+                        <div className="fw-semibold">{r.name}</div>
+                        <div className="text-muted fs-12">{r.username}</div>
+                      </td>
+                      <td>{r.section_title}</td>
+                      <td className="text-end">
+                        {r.failed} / {MAX_FAILED}{" "}
+                        {r.has_passed
+                          ? <span className="badge bg-success-transparent text-success">Passed</span>
+                          : locked && <span className="badge bg-danger-transparent text-danger">Locked</span>}
+                      </td>
+                      <td className="text-nowrap">{fmtDateTime(r.last_attempt)}</td>
+                      <td className="text-end">
+                        <button className="btn btn-outline-primary btn-sm text-nowrap"
+                          disabled={busyKey === key} onClick={() => reset(r)}>
+                          {busyKey === key
+                            ? <span className="spinner-border spinner-border-sm" />
+                            : <><i className="ti ti-refresh me-1" />Reset</>}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

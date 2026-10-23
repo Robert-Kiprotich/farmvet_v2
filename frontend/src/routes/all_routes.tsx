@@ -2,6 +2,7 @@
 
 export const all_routes = {
   // agent dashboard
+  dashboard:"/"
  portal: "/portal",
 
   // Case Management routes

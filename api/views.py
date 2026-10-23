@@ -2766,6 +2766,64 @@ def submit_quiz(request):
             return JsonResponse({'message': str(e)}, status=500)
 
     return JsonResponse({'message': 'No attempts left'}, status=405)
+
+from django.db.models import Max  # add to imports
+
+
+@api_view(["GET"])
+@permission_classes([IsAdminOnly])
+def tutorial_attempts(request, tutorial_id):
+    """Learners with failed quiz attempts in this tutorial, grouped by section."""
+    rows = (
+        QuizResult.objects.filter(section__lesson_id=tutorial_id)
+        .values("user_id", "user__username", "user__firstname", "user__lastname",
+                "section_id", "section__title")
+        .annotate(
+            failed=Count("id", filter=Q(passed="fail")),
+            passed=Count("id", filter=Q(passed="pass")),
+            last_attempt=Max("timestamp"),
+        )
+        .filter(failed__gt=0)
+        .order_by("-last_attempt")
+    )
+    return Response([{
+        "user_id": r["user_id"],
+        "username": r["user__username"],
+        "name": f'{r["user__firstname"] or ""} {r["user__lastname"] or ""}'.strip() or r["user__username"],
+        "section_id": r["section_id"],
+        "section_title": r["section__title"],
+        "failed": r["failed"],
+        "has_passed": r["passed"] > 0,
+        "last_attempt": r["last_attempt"],
+    } for r in rows])
+
+
+@api_view(["POST"])
+@permission_classes([IsAdminOnly])
+def tutorial_attempts_reset(request, tutorial_id):
+    """Delete a learner's FAILED results so they can sit the quiz again.
+    body: { "user": <id>, "section": <id, optional - omit to reset every section> }"""
+    from users.models import ActivityLog
+
+    user_id = request.data.get("user")
+    section_id = request.data.get("section")
+    if not user_id:
+        return Response({"error": "user is required."}, status=400)
+
+    qs = QuizResult.objects.filter(
+        section__lesson_id=tutorial_id, user_id=user_id, passed="fail"
+    )
+    if section_id:
+        qs = qs.filter(section_id=section_id)
+
+    deleted, _ = qs.delete()
+    ActivityLog.log(
+        "quiz_attempts_reset", user=request.user, entity="Tutorial", entity_id=tutorial_id,
+        detail=f"Reset {deleted} failed attempt(s) for user {user_id}"
+               + (f" in section {section_id}" if section_id else ""),
+        request=request,
+    )
+    return Response({"deleted": deleted})
 def quiz_page(request):
     moderator = Moderator.objects.first()
     data = None
@@ -5015,25 +5073,22 @@ def mpesa_callback(request):
 # CHECK PAYMENT STATUS
 # =========================================
 
+
 @csrf_exempt
-@user_passes_test(vet_check, login_url='vet-login')
+@login_required
 def check_mpesa_status(request):
-
     if request.method != "POST":
+        return JsonResponse({"message": "Invalid request"}, status=400)
 
-        return JsonResponse({
-            "message": "Invalid request"
-        }, status=400)
-
-    checkout_request_id = request.POST.get(
-        "checkout_request_id"
-    )
+    checkout_request_id = request.POST.get("checkout_request_id")
+    if not checkout_request_id and request.body:
+        try:
+            checkout_request_id = json.loads(request.body).get("checkout_request_id")
+        except (ValueError, AttributeError):
+            pass
 
     if not checkout_request_id:
-
-        return JsonResponse({
-            "error": "Missing checkout_request_id"
-        }, status=400)
+        return JsonResponse({"error": "Missing checkout_request_id"}, status=400)
 
     payment = Payment.objects.filter(
         checkout_request_id=checkout_request_id,
